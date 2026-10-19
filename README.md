@@ -9,6 +9,7 @@ Gestor de casos de prueba al estilo TestRail, hecho con **Flask + SQLAlchemy (SQ
 | **Dirección** | http://localhost:5000 (modo `debug=True`) |
 | **Acceso** | Sin usuario ni contraseña: se abre directo en el Dashboard |
 | **Base de datos** | `instance/testboard.db` (SQLite, se crea sola con datos de ejemplo) |
+| **Repositorio** | https://github.com/alcedoanggi-crypto/QA-testing-testboard |
 | **Video** | [`docs/video/qa-testboard-presentacion.mp4`](docs/video/qa-testboard-presentacion.mp4): presentación y recorrido paso a paso |
 | **Guía para aprender** | [`docs/guia/README.md`](docs/guia/README.md): cómo se construyó, capítulo por capítulo |
 

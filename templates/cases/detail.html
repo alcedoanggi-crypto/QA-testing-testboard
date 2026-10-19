@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "macros.html" import status_badge, priority_badge %}
+{% block title %}C{{ case.id }}{% endblock %}
+{% block content %}
+<div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+    <div>
+        <div class="text-xs text-slate-500"><a class="hover:underline" href="{{ url_for('views.cases', section=case.section_id) }}">{{ case.section.path }}</a></div>
+        <h1 class="text-2xl font-bold"><span class="font-mono text-slate-400">C{{ case.id }}</span> {{ case.title }}</h1>
+    </div>
+    <div class="flex gap-2">
+        <a class="btn" href="{{ url_for('views.cases_edit', case_id=case.id) }}">Editar</a>
+        <form method="post" action="{{ url_for('views.cases_delete', case_id=case.id) }}" data-confirm="¿Eliminar C{{ case.id }}?">
+            <button class="btn btn-danger" type="submit" id="btn-delete-case">Eliminar</button></form>
+    </div>
+</div>
+<div class="grid gap-5 lg:grid-cols-3">
+    <section class="card p-5 lg:col-span-2">
+        <dl class="mb-5 grid grid-cols-[140px_1fr] gap-x-4 gap-y-2 text-sm">
+            <dt class="font-semibold text-slate-500">Prioridad</dt><dd>{{ priority_badge(case.priority) }}</dd>
+            <dt class="font-semibold text-slate-500">Tipo</dt><dd>{{ case.type }}</dd>
+            <dt class="font-semibold text-slate-500">Referencias</dt><dd>{{ case.refs or '—' }}</dd>
+            <dt class="font-semibold text-slate-500">Precondiciones</dt><dd class="whitespace-pre-wrap">{{ case.preconditions or '—' }}</dd>
+        </dl>
+        <h2 class="mb-2 font-semibold">Pasos</h2>
+        <table class="w-full text-sm" id="steps-table">
+            <thead><tr><th class="th w-10">#</th><th class="th">Acción</th><th class="th">Resultado esperado</th></tr></thead>
+            <tbody>
+            {% for step in case.steps %}
+            <tr><td class="td font-semibold text-slate-400">{{ loop.index }}</td><td class="td">{{ step.action }}</td><td class="td">{{ step.expected or '—' }}</td></tr>
+            {% else %}
+            <tr><td class="td text-slate-500" colspan="3">Sin pasos.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    <section class="card">
+        <div class="card-head"><h2 class="font-semibold">Historial de ejecuciones</h2></div>
+        <ul class="divide-y divide-line">
+            {% for r in case.results|sort(attribute='id', reverse=True) %}
+            <li class="px-5 py-3 text-sm">
+                <div class="flex items-center justify-between">{{ status_badge(r.status) }}
+                    <a class="text-xs hover:underline" href="{{ url_for('views.runs_detail', run_id=r.run_id) }}">R{{ r.run_id }} {{ r.run.name }}</a></div>
+                {% if r.comment %}<p class="mt-1 text-slate-600">{{ r.comment }}</p>{% endif %}
+                {% if r.executed_at %}<p class="text-xs text-slate-500">{{ r.executed_by }} · {{ r.executed_at.strftime('%d/%m/%Y %H:%M') }}</p>{% endif %}
+            </li>
+            {% else %}
+            <li class="px-5 py-4 text-sm text-slate-500">Todavía no está en ninguna ejecución.</li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+{% endblock %}

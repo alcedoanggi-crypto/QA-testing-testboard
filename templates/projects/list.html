@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Proyectos{% endblock %}
+{% block content %}
+<div class="mb-5">
+    <h1 class="text-2xl font-bold">Proyectos</h1>
+    <p class="text-sm text-slate-500">Cada proyecto agrupa sus secciones, casos de prueba y ejecuciones.</p>
+</div>
+<div class="grid gap-5 lg:grid-cols-3">
+    <section class="card p-5">
+        <h2 class="mb-3 font-semibold">Nuevo proyecto</h2>
+        <form method="post" action="{{ url_for('views.projects_create') }}" class="space-y-3" id="form-project">
+            <div><label class="label" for="p-name">Nombre</label>
+                <input class="input" id="p-name" name="name" maxlength="120" required placeholder="Ej.: Portal de clientes"></div>
+            <div><label class="label" for="p-desc">Descripción</label>
+                <textarea class="input" id="p-desc" name="description" rows="3"></textarea></div>
+            <button class="btn btn-primary w-full" type="submit">Crear proyecto</button>
+        </form>
+    </section>
+    <section class="card lg:col-span-2">
+        <table class="w-full text-sm" id="projects-table">
+            <thead><tr><th class="th">Proyecto</th><th class="th text-right">Secciones</th><th class="th text-right">Casos</th>
+                <th class="th text-right">Ejecuciones</th><th class="th"></th></tr></thead>
+            <tbody>
+            {% for p in all_projects %}
+            <tr class="hover:bg-slate-50" data-project="{{ p.id }}">
+                <td class="td"><a class="font-semibold hover:text-emerald-700" href="{{ url_for('views.cases', project=p.id) }}">{{ p.name }}</a>
+                    <div class="text-xs text-slate-500">{{ p.description or 'Sin descripción' }}</div></td>
+                <td class="td text-right">{{ p.sections|length }}</td>
+                <td class="td text-right">{{ p.cases|length }}</td>
+                <td class="td text-right">{{ p.runs|length }}</td>
+                <td class="td whitespace-nowrap text-right">
+                    <a class="btn btn-sm" href="{{ url_for('views.projects_edit', project_id=p.id) }}">Editar</a>
+                    <form method="post" action="{{ url_for('views.projects_delete', project_id=p.id) }}" class="inline"
+                          data-confirm="¿Eliminar el proyecto «{{ p.name }}» con todos sus casos y ejecuciones?">
+                        <button class="btn btn-sm btn-danger" type="submit">Eliminar</button></form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td class="td py-8 text-center text-slate-500" colspan="5">Aún no hay proyectos. Crea el primero.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+{% endblock %}

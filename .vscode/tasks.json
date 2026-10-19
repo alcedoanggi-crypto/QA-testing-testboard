@@ -1,0 +1,75 @@
+{
+    // Tareas de VS Code: Terminal > Run Task... (o Ctrl+Shift+P → "Tasks: Run Task").
+    // "Iniciar servidor" se ejecuta automáticamente al abrir la carpeta gracias a runOptions.runOn.
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Iniciar servidor (Flask :5000)",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": ["app.py"],
+            "linux": { "command": "${workspaceFolder}/.venv/bin/python" },
+            "osx": { "command": "${workspaceFolder}/.venv/bin/python" },
+            "options": { "cwd": "${workspaceFolder}" },
+            "isBackground": true,
+            "runOptions": { "runOn": "folderOpen" },
+            "presentation": { "reveal": "always", "panel": "dedicated", "group": "servidor" },
+            // Le dice a VS Code cuándo el servidor "ya arrancó" (si no, la tarea quedaría esperando).
+            "problemMatcher": {
+                "owner": "flask",
+                "pattern": { "regexp": "^__nunca_coincide__$" },
+                "background": {
+                    "activeBegin": "Serving Flask app",
+                    "activeEnd": "Running on http://"
+                }
+            }
+        },
+        {
+            "label": "Instalar dependencias",
+            "type": "shell",
+            "command": "python -m venv .venv; ${workspaceFolder}/.venv/Scripts/python.exe -m pip install -r requirements.txt",
+            "linux": { "command": "python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt" },
+            "osx": { "command": "python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt" },
+            "options": { "cwd": "${workspaceFolder}" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Pruebas (pytest)",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": ["-m", "pytest", "-v"],
+            "linux": { "command": "${workspaceFolder}/.venv/bin/python" },
+            "osx": { "command": "${workspaceFolder}/.venv/bin/python" },
+            "options": { "cwd": "${workspaceFolder}" },
+            "group": { "kind": "test", "isDefault": true },
+            "problemMatcher": []
+        },
+        {
+            "label": "Pruebas con cobertura (pytest-cov)",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+            "args": ["-m", "pytest", "--cov=app", "--cov-report=term-missing", "--cov-report=html"],
+            "linux": { "command": "${workspaceFolder}/.venv/bin/python" },
+            "osx": { "command": "${workspaceFolder}/.venv/bin/python" },
+            "options": { "cwd": "${workspaceFolder}" },
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Compilar Tailwind CSS",
+            "type": "shell",
+            "command": "npx tailwindcss@3 -c static/src/tailwind.config.js -i static/src/input.css -o static/css/tailwind.css --minify",
+            "options": { "cwd": "${workspaceFolder}" },
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Tailwind en modo watch",
+            "type": "shell",
+            "command": "npx tailwindcss@3 -c static/src/tailwind.config.js -i static/src/input.css -o static/css/tailwind.css --watch",
+            "options": { "cwd": "${workspaceFolder}" },
+            "isBackground": true,
+            "problemMatcher": []
+        }
+    ]
+}

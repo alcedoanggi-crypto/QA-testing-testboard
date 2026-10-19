@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% from "macros.html" import status_badge, priority_badge, progress_bar, status_counts %}
+{% block title %}R{{ run.id }}{% endblock %}
+{% block content %}
+{% set s = run.stats() %}
+<div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+    <div>
+        <div class="text-xs text-slate-500">{{ run.project.name }}</div>
+        <h1 class="text-2xl font-bold"><span class="font-mono text-slate-400">R{{ run.id }}</span> {{ run.name }}
+            {% if run.is_completed %}<span class="badge ml-2 bg-slate-200 align-middle text-slate-700">Cerrada</span>{% endif %}</h1>
+        {% if run.description %}<p class="text-sm text-slate-500">{{ run.description }}</p>{% endif %}
+    </div>
+    <div class="flex gap-2">
+        {% if not run.is_completed %}
+        <form method="post" action="{{ url_for('views.runs_close', run_id=run.id) }}"
+              data-confirm="¿Cerrar la ejecución? Ya no se podrán cambiar los resultados.">
+            <button class="btn btn-dark" type="submit" id="btn-close-run">Cerrar ejecución</button></form>
+        {% endif %}
+        <form method="post" action="{{ url_for('views.runs_delete', run_id=run.id) }}" data-confirm="¿Eliminar R{{ run.id }} y sus resultados?">
+            <button class="btn btn-danger" type="submit">Eliminar</button></form>
+    </div>
+</div>
+
+<div class="mb-5 grid gap-5 lg:grid-cols-3">
+    <section class="card p-5">
+        <div class="flex items-end justify-between">
+            <div><div class="text-3xl font-bold">{{ s.pass_rate }}%</div><div class="text-xs text-slate-500">pass rate (de lo ejecutado)</div></div>
+            <div class="text-right"><div class="text-xl font-bold">{{ s.progress }}%</div><div class="text-xs text-slate-500">progreso</div></div>
+        </div>
+        <div class="mt-4">{{ progress_bar(s, 'h-3') }}</div>
+    </section>
+    <section class="card p-5 lg:col-span-2">{{ status_counts(s) }}</section>
+</div>
+
+<div class="mb-3 flex flex-wrap gap-1" role="tablist" id="status-tabs">
+    <a href="{{ url_for('views.runs_detail', run_id=run.id) }}"
+       class="rounded-md px-3 py-1.5 text-sm font-semibold {{ 'bg-navy text-white' if not status_filter else 'bg-white text-slate-600 border border-line' }}">Todos ({{ s.total }})</a>
+    {% for key in STATUSES %}
+    <a href="{{ url_for('views.runs_detail', run_id=run.id, status=key) }}"
+       class="rounded-md px-3 py-1.5 text-sm font-semibold {{ 'bg-navy text-white' if status_filter == key else 'bg-white text-slate-600 border border-line' }}">{{ key|capitalize }} ({{ s[key] }})</a>
+    {% endfor %}
+</div>
+
+<div class="card overflow-x-auto">
+    <table class="w-full text-sm" id="results-table">
+        <thead><tr><th class="th w-16">ID</th><th class="th">Caso</th><th class="th">Prioridad</th><th class="th">Estado</th>
+            <th class="th w-[46%]">{{ 'Detalle' if run.is_completed else 'Registrar resultado' }}</th></tr></thead>
+        <tbody>
+        {% for r in results %}
+        <tr id="t{{ r.id }}" class="align-top hover:bg-slate-50" data-result="{{ r.id }}">
+            <td class="td font-mono text-xs text-slate-500">T{{ r.id }}</td>
+            <td class="td">
+                {% if r.case_id %}<a class="font-medium hover:underline" href="{{ url_for('views.cases_detail', case_id=r.case_id) }}">{{ r.case_title }}</a>
+                {% else %}<span class="font-medium">{{ r.case_title }}</span> <span class="text-xs text-slate-400">(caso eliminado)</span>{% endif %}
+                <div class="text-xs text-slate-500">{{ r.section_path }}</div></td>
+            <td class="td">{{ priority_badge(r.priority) }}</td>
+            <td class="td">{{ status_badge(r.status) }}
+                {% if r.executed_at %}<div class="mt-1 text-xs text-slate-500">{{ r.executed_by }}<br>{{ r.executed_at.strftime('%d/%m %H:%M') }}</div>{% endif %}</td>
+            <td class="td">
+                {% if run.is_completed %}
+                <span class="text-slate-600">{{ r.comment or '—' }}</span>
+                {% else %}
+                <form method="post" action="{{ url_for('views.results_update', result_id=r.id) }}" class="flex flex-wrap gap-2" data-result-form>
+                    <input type="hidden" name="status_filter" value="{{ status_filter or '' }}">
+                    <select class="input w-32" name="status" aria-label="Estado de T{{ r.id }}">
+                        {% for key in STATUSES %}<option value="{{ key }}" {% if r.status == key %}selected{% endif %}>{{ key|capitalize }}</option>{% endfor %}
+                    </select>
+                    <input class="input w-28" name="executed_by" value="{{ r.executed_by or '' }}" placeholder="Tester" aria-label="Ejecutado por">
+                    <input class="input min-w-[160px] flex-1" name="comment" value="{{ r.comment or '' }}"
+                           placeholder="Comentario (obligatorio si Failed/Blocked)" aria-label="Comentario">
+                    <button class="btn btn-sm btn-primary" type="submit">Guardar</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="td py-10 text-center text-slate-500">No hay resultados con este estado.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

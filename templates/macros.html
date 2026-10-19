@@ -1,0 +1,36 @@
+{# Componentes reutilizables. Uso: {% from "macros.html" import status_badge, progress_bar %} #}
+
+{# Las clases se escriben COMPLETAS (no "badge-" ~ status): Tailwind solo genera las clases que
+   encuentra escritas literalmente en las plantillas. #}
+{% macro status_badge(status) -%}
+{%- set icons = {'passed': '✓', 'failed': '✕', 'blocked': '⊘', 'untested': '○'} -%}
+{%- set classes = {'passed': 'badge-passed', 'failed': 'badge-failed', 'blocked': 'badge-blocked', 'untested': 'badge-untested'} -%}
+<span class="badge {{ classes[status] }}"><span aria-hidden="true">{{ icons[status] }}</span>{{ status|capitalize }}</span>
+{%- endmacro %}
+
+{% macro priority_badge(priority) -%}
+{%- set colors = {'Critical': 'bg-red-900', 'High': 'bg-failed', 'Medium': 'bg-blocked', 'Low': 'bg-slate-400'} -%}
+<span class="inline-flex items-center gap-1.5 text-sm"><span class="h-2 w-2 rounded-sm {{ colors[priority] }}"></span>{{ priority }}</span>
+{%- endmacro %}
+
+{# Barra apilada: verde (passed), rojo (failed), amarillo (blocked); el fondo gris es lo no probado. #}
+{% macro progress_bar(stats, height='h-2.5') -%}
+<div class="flex {{ height }} gap-0.5 overflow-hidden rounded-full bg-untested-soft"
+     title="Passed {{ stats.passed }} · Failed {{ stats.failed }} · Blocked {{ stats.blocked }} · Untested {{ stats.untested }}"
+     role="img" aria-label="Passed {{ stats.passed }}, Failed {{ stats.failed }}, Blocked {{ stats.blocked }}, Untested {{ stats.untested }}">
+    {% for key, color in [('passed', 'bg-passed'), ('failed', 'bg-failed'), ('blocked', 'bg-blocked')] %}
+    {% if stats.total and stats[key] %}<span class="{{ color }}" style="width: {{ stats[key] / stats.total * 100 }}%"></span>{% endif %}
+    {% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro status_counts(stats) -%}
+<div class="grid grid-cols-4 gap-2">
+    {% for key in ['passed', 'failed', 'blocked', 'untested'] %}
+    <div class="rounded-lg border border-line bg-slate-50 px-3 py-2">
+        <div class="text-xl font-bold">{{ stats[key] }}</div>
+        {{ status_badge(key) }}
+    </div>
+    {% endfor %}
+</div>
+{%- endmacro %}

@@ -1,0 +1,22 @@
+{
+    // Pruebas: VS Code descubre y ejecuta pytest desde la pestaña "Testing" (ícono del matraz).
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": ["tests"],
+    "python.testing.cwd": "${workspaceFolder}",
+
+    // Intérprete del entorno virtual del proyecto.
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+    "python.terminal.activateEnvironment": true,
+
+    // Permite que la tarea "Iniciar servidor" corra sola al abrir la carpeta (runOn: folderOpen).
+    "task.allowAutomaticTasks": "on",
+
+    // Autocompletado de clases de Tailwind dentro de las plantillas Jinja.
+    "files.associations": { "*.html": "jinja-html" },
+    "emmet.includeLanguages": { "jinja-html": "html" },
+    "tailwindCSS.includeLanguages": { "jinja-html": "html" },
+    "tailwindCSS.experimental.configFile": "static/src/tailwind.config.js",
+
+    "files.exclude": { "**/__pycache__": true, "**/.pytest_cache": true }
+}

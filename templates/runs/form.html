@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Nueva ejecución{% endblock %}
+{% block content %}
+<div class="card mx-auto max-w-4xl p-6">
+    <h1 class="mb-1 text-xl font-bold">Nueva ejecución</h1>
+    <p class="mb-5 text-sm text-slate-500">{{ project.name }} · {{ project.cases|length }} casos disponibles</p>
+    <form method="post" class="space-y-4" id="form-run">
+        <div><label class="label" for="r-name">Nombre</label>
+            <input class="input" id="r-name" name="name" maxlength="150" required placeholder="Ej.: Regresión Sprint 15"></div>
+        <div><label class="label" for="r-desc">Descripción</label>
+            <textarea class="input" id="r-desc" name="description" rows="2"></textarea></div>
+
+        <fieldset class="space-y-2">
+            <legend class="label">¿Qué casos incluir?</legend>
+            <label class="flex items-center gap-2 text-sm"><input type="radio" name="include_all" value="1" checked data-case-picker-toggle>
+                Todos los casos del proyecto</label>
+            <label class="flex items-center gap-2 text-sm"><input type="radio" name="include_all" value="0" data-case-picker-toggle>
+                Elegir casos específicos</label>
+        </fieldset>
+
+        <div id="case-picker" class="hidden max-h-96 overflow-y-auto rounded-lg border border-line p-3">
+            {% for section, depth in tree %}
+            <div class="mb-2" style="margin-left: {{ depth * 16 }}px">
+                <div class="text-xs font-bold uppercase tracking-wide text-slate-500">📁 {{ section.name }}</div>
+                {% for c in section.cases %}
+                <label class="flex items-center gap-2 py-0.5 text-sm">
+                    <input type="checkbox" name="case_ids" value="{{ c.id }}">
+                    <span class="font-mono text-xs text-slate-400">C{{ c.id }}</span> {{ c.title }}</label>
+                {% else %}
+                {% if not section.children %}<div class="text-xs text-slate-400">(sin casos)</div>{% endif %}
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <a class="btn" href="{{ url_for('views.runs') }}">Cancelar</a>
+            <button class="btn btn-primary" type="submit" id="btn-create-run">Crear ejecución</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

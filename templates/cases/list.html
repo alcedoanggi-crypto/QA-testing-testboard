@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% from "macros.html" import status_badge, priority_badge %}
+{% block title %}Casos de Prueba{% endblock %}
+{% block content %}
+<div class="grid gap-5 lg:grid-cols-[270px_minmax(0,1fr)]">
+    {# ------------------------------------------------ panel lateral: secciones (carpetas) #}
+    <aside class="card h-fit p-3" aria-label="Secciones">
+        <div class="mb-2 flex items-center justify-between px-2 text-xs font-bold uppercase tracking-wide text-slate-500">Secciones</div>
+        <nav class="space-y-0.5" id="section-tree">
+            <a href="{{ url_for('views.cases') }}" class="tree-link {% if not current_section %}active{% endif %}">
+                <span>📁 Todas las secciones</span><span class="text-xs text-slate-500">{{ project.cases|length }}</span></a>
+            {% for section, depth in tree %}
+            <div class="group flex items-center">
+                <a href="{{ url_for('views.cases', section=section.id) }}" style="padding-left: {{ 8 + depth * 16 }}px"
+                   class="tree-link flex-1 {% if current_section and current_section.id == section.id %}active{% endif %}" data-section="{{ section.id }}">
+                    <span class="truncate">📁 {{ section.name }}</span><span class="text-xs text-slate-500">{{ section.total_cases() }}</span></a>
+                <form method="post" action="{{ url_for('views.sections_delete', section_id=section.id) }}" class="hidden group-hover:block"
+                      data-confirm="¿Eliminar la sección «{{ section.name }}», sus subsecciones y sus {{ section.total_cases() }} casos?">
+                    <button class="px-1.5 text-slate-400 hover:text-failed" title="Eliminar sección" type="submit">✕</button></form>
+            </div>
+            {% endfor %}
+        </nav>
+        <form method="post" action="{{ url_for('views.sections_create') }}" class="mt-4 space-y-2 border-t border-line pt-3" id="form-section">
+            <label class="label" for="s-name">Nueva sección</label>
+            <input class="input" id="s-name" name="name" maxlength="120" placeholder="Nombre de la carpeta" required>
+            <select class="input" name="parent_id" aria-label="Sección padre">
+                <option value="">— En la raíz —</option>
+                {% for section, depth in tree %}
+                <option value="{{ section.id }}" {% if current_section and current_section.id == section.id %}selected{% endif %}>{{ '  ' * depth }}{{ section.path }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-sm w-full" type="submit">+ Agregar sección</button>
+        </form>
+    </aside>
+
+    {# ------------------------------------------------ tabla principal #}
+    <section>
+        <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <div class="text-xs text-slate-500">{{ project.name }}{% if current_section %} › {{ current_section.path }}{% endif %}</div>
+                <h1 class="text-2xl font-bold">{{ current_section.name if current_section else 'Casos de Prueba' }}</h1>
+                <p class="text-sm text-slate-500">{{ cases|length }} caso(s){% if current_section %} en esta sección y sus subsecciones{% endif %}</p>
+            </div>
+            <a class="btn btn-primary" id="btn-new-case"
+               href="{{ url_for('views.cases_new', section=current_section.id if current_section else None) }}">+ Nuevo caso</a>
+        </div>
+
+        <form method="get" class="mb-3 flex flex-wrap gap-2" id="filters">
+            {% if current_section %}<input type="hidden" name="section" value="{{ current_section.id }}">{% endif %}
+            <input class="input max-w-xs" type="search" name="q" value="{{ q }}" placeholder="Buscar título, referencia o C12…" aria-label="Buscar">
+            <select class="input w-auto" name="priority" data-autosubmit aria-label="Prioridad">
+                <option value="">Toda prioridad</option>
+                {% for p in PRIORITIES %}<option {% if priority == p %}selected{% endif %}>{{ p }}</option>{% endfor %}
+            </select>
+            <button class="btn" type="submit">Filtrar</button>
+            {% if q or priority %}<a class="btn" href="{{ url_for('views.cases', section=current_section.id if current_section else None) }}">Limpiar</a>{% endif %}
+        </form>
+
+        <div class="card overflow-x-auto">
+            <table class="w-full text-sm" id="cases-table">
+                <thead><tr><th class="th w-20">ID</th><th class="th">Título</th><th class="th">Sección</th><th class="th">Prioridad</th>
+                    <th class="th">Tipo</th><th class="th">Referencias</th><th class="th">Último estado</th><th class="th"></th></tr></thead>
+                <tbody>
+                {% for c in cases %}
+                <tr class="hover:bg-slate-50" data-case="{{ c.id }}">
+                    <td class="td font-mono text-xs text-slate-500">C{{ c.id }}</td>
+                    <td class="td"><a class="font-medium hover:text-emerald-700 hover:underline" href="{{ url_for('views.cases_detail', case_id=c.id) }}">{{ c.title }}</a></td>
+                    <td class="td text-xs text-slate-500">{{ c.section.path }}</td>
+                    <td class="td">{{ priority_badge(c.priority) }}</td>
+                    <td class="td">{{ c.type }}</td>
+                    <td class="td">{% if c.refs %}<span class="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-semibold">{{ c.refs }}</span>{% endif %}</td>
+                    <td class="td">{% if c.last_status %}{{ status_badge(c.last_status) }}{% else %}<span class="text-slate-400">—</span>{% endif %}</td>
+                    <td class="td text-right"><a class="btn btn-sm" href="{{ url_for('views.cases_edit', case_id=c.id) }}">Editar</a></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="td py-10 text-center text-slate-500">
+                    No hay casos aquí. {% if not tree %}Primero crea una sección en el panel izquierdo.{% else %}Crea uno con «+ Nuevo caso».{% endif %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
